@@ -16,15 +16,27 @@
 # =================================================================
 argmax:
     # Prologue
+    bgt a1, zero, .Lstart
+    li a0, 36
+    j exit
 
-
+.Lstart:
+    li t3, 0  # curr index 
+    li t0, 0  # max index
+    lw t1, 0(a0) # max val
+    addi t3, t3, 1
 loop_start:
-
-
-loop_continue:
-
+    bge t3, a1, loop_end
+    addi a0, a0, 4
+    lw t2, 0(a0) # current val
+    ble t2, t1, .Lnext_loop
+    mv t0, t3  # max index
+    lw t1, 0(a0) # max val
+.Lnext_loop:
+    addi t3, t3, 1
+    j loop_start
 
 loop_end:
     # Epilogue
-
+    mv a0, t0
     jr ra
