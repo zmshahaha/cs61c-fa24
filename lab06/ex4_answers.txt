@@ -1,2 +1,2 @@
-1. 
-2. 
+Question 1: What is the critical path of this pipelined circuit in ns. The answer should be an integer without any units.
+Question 2: What is the maximum clock rate for this pipelined circuit in MHz. The answer should be a decimal number without any units.
