@@ -1,3 +1,34 @@
+## classify
+
+callee saved用处:整个函数都要用
+
+举例
+
+如果使用caller saved，那么下面的t0需要保存很多次(在每次call一个函数时候都要保存)
+
+```
+li t0, 100 # 要用t0
+# 需要保存t0
+call func1
+# 恢复t0
+li t0, 101 # 要用t0
+# 需要保存t0
+call func2
+# 恢复t0
+```
+
+而如果使用callee saved，则只需要保存一次(func1和func2不用s0前提下)
+
+如果func1和func2不用s0，只需保存一次
+
+```
+li s0, 100
+# 保存s0
+call func1
+call func2
+# 恢复s0
+```
+
 ## logisim
 assert表示关掉
 
@@ -33,3 +64,5 @@ drain是目的地，source是源，gate是门
 - 执行数字逻辑
 - 稳定后IF部分的PC是输入跳转到的指令的下一条，执行部分的中转指令输入是跳转到的指令，中转的pc是输入跳转到pc
 - 则下一时钟执行部分执行的就是跳转到的指令
+
+第一个时钟的时候执行模块没有取指模块来的数据，所以此时执行的是寄存器的默认值
