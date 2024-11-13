@@ -437,6 +437,21 @@ PyNumberMethods Matrix61c_as_number = {
  */
 PyObject *Matrix61c_set_value(Matrix61c *self, PyObject* args) {
     /* TODO: YOUR CODE HERE */
+    int row, col;
+    double val;
+
+    if(!PyArg_ParseTuple(args, "iid", &row, &col, &val)) {
+        PyErr_SetString(PyExc_TypeError, "Invalid arguments");
+        return NULL;
+    }
+
+    if(row >= self->mat->rows || col >= self->mat->cols || row<0 || col < 0) {
+        PyErr_SetString(PyExc_IndexError, "row or column index out of range");
+        return NULL;
+    }
+
+    set(self->mat, row, col, val); 
+    return Py_None;
 }
 
 /*
@@ -446,6 +461,20 @@ PyObject *Matrix61c_set_value(Matrix61c *self, PyObject* args) {
  */
 PyObject *Matrix61c_get_value(Matrix61c *self, PyObject* args) {
     /* TODO: YOUR CODE HERE */
+    int row, col;
+
+    if(!PyArg_ParseTuple(args, "ii", &row, &col)) {
+        PyErr_SetString(PyExc_TypeError, "Invalid arguments--");
+        return NULL;
+    }
+
+    if(row>=(self->mat->rows) || col>=(self->mat->cols) || row<0 || col < 0) {
+        PyErr_SetString(PyExc_IndexError, "Bad Indices");
+        return NULL;
+    }
+
+    double ret_val = get(self->mat, row, col);
+    return PyFloat_FromDouble(ret_val);
 }
 
 /*
@@ -456,6 +485,8 @@ PyObject *Matrix61c_get_value(Matrix61c *self, PyObject* args) {
  */
 PyMethodDef Matrix61c_methods[] = {
     /* TODO: YOUR CODE HERE */
+    {"get", (PyCFunction) Matrix61c_get_value, METH_VARARGS, "Dont think this matters"},
+    {"set", (PyCFunction) Matrix61c_set_value, METH_VARARGS, "Dont think this matters"},
     {NULL, NULL, 0, NULL}
 };
 
