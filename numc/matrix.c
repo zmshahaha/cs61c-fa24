@@ -302,8 +302,6 @@ int sub_matrix(matrix *result, matrix *mat1, matrix *mat2) {
 #define BLOCKSIZE 32
 int mul_matrix(matrix *result, matrix *mat1, matrix *mat2) {
     /* TODO: YOUR CODE HERE */
-    double ** mat1_data = mat1->data;
-    double ** mat2_data = mat2->data;
     double ** result_data = result->data;
     
     int m1r = mat1->rows, m1c = mat1->cols, m2r = mat2->rows, m2c = mat2->cols;
