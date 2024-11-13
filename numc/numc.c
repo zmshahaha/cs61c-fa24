@@ -280,13 +280,95 @@ PyObject *Matrix61c_repr(PyObject *self) {
 }
 
 /* NUMBER METHODS */
+typedef enum {TWO, ONE, POW} optype;
+typedef int (*CallbackTwoParam)(matrix *result, matrix *mat1, matrix *mat2);
+typedef int (*CallbackOneParam)(matrix *result, matrix *mat);
+typedef int (*CallbackPow)(matrix *result, matrix *mat, int pow);
 
+static PyObject *Matrix61c_TwoParamOp(Matrix61c* self, PyObject* args, int (*callback)(matrix *result, matrix *mat1, matrix *mat2))
+{
+    if(!PyObject_TypeCheck(args, &Matrix61cType)) { 
+        PyErr_SetString(PyExc_TypeError, "Invalid arguments");
+        return NULL;
+    }
+    Matrix61c* mat2 = (Matrix61c*) args;
+    if(!(self->mat->rows==mat2->mat->rows && self->mat->cols==mat2->mat->cols)) {
+        PyErr_SetString(PyExc_ValueError, "Incorrect number of elements in list");
+        return NULL;
+    }
+    Matrix61c* wrap = (Matrix61c*) Matrix61c_new(&Matrix61cType, NULL, NULL);
+    matrix* realMat1 = self->mat;
+    matrix* realMat2 = mat2->mat;
+    int rows1 = realMat1->rows;
+    int cols1 = realMat1->cols;
+
+    matrix** result = malloc(sizeof(matrix*)); // allocate matrix, allocate matrix61c object using new , get->shape 
+    allocate_matrix(result, rows1, cols1); //we forgot that we already made an allocate_matrix method in matrix.c
+    callback(*result, realMat1, realMat2); 
+
+    wrap->mat = *result;
+    wrap->shape = get_shape(rows1, cols1);
+    return (PyObject *) wrap; // should we return a Matrix61c * or do we have to cast it?
+}
+
+static PyObject *Matrix61c_OneParamOp(Matrix61c* self, int (*callback)(matrix *result, matrix *mat))
+{
+    Matrix61c* wrap = (Matrix61c*) Matrix61c_new(&Matrix61cType, NULL, NULL);
+    matrix* realMat1 = self->mat;
+    int rows1 = realMat1->rows;
+    int cols1 = realMat1->cols;
+
+    matrix** result = malloc(sizeof(matrix*)); // allocate matrix, allocate matrix61c object using new , get->shape 
+    allocate_matrix(result, rows1, cols1); //we forgot that we already made an allocate_matrix method in matrix.c
+    callback(*result, realMat1); 
+
+    wrap->mat = *result;
+    wrap->shape = get_shape(rows1, cols1);
+    return  (PyObject *) wrap; // should we return a Matrix61c * or do we have to cast it?
+}
+
+static PyObject *Matrix61c_PowOp(Matrix61c* self, PyObject* pow, int (*callback)(matrix *result, matrix *mat, int power))
+{
+    if(!PyLong_Check(pow)) { 
+        PyErr_SetString(PyExc_TypeError, "Invalid arguments");
+        return NULL;
+    }
+    int power = (int) PyLong_AsLong(pow); 
+    if(!(self->mat->rows == self->mat->cols) || power<0) {
+        PyErr_SetString(PyExc_ValueError, "Not a square matrix or pow is negative");
+        return NULL;
+    }
+
+    Matrix61c* wrap = (Matrix61c*) Matrix61c_new(&Matrix61cType, NULL, NULL);
+    matrix* realMat1 = self->mat;
+    int rows1 = realMat1->rows;
+    int cols1 = realMat1->cols;
+
+    matrix** result = malloc(sizeof(matrix*)); 
+    allocate_matrix(result, rows1, cols1);
+    callback(*result,realMat1,power); 
+
+    wrap->mat = *result;
+    wrap->shape = get_shape(rows1, cols1);
+    return  (PyObject *) wrap;
+}
+
+static PyObject *Matrix61c_ops(optype op, Matrix61c* self, PyObject* args, void *callback)
+{
+    switch (op) {
+        case TWO: return Matrix61c_TwoParamOp(self, args, (CallbackTwoParam)callback);
+        case ONE: return Matrix61c_OneParamOp(self, (CallbackOneParam)callback);
+        case POW: return Matrix61c_PowOp(self, args, (CallbackPow)callback);
+    }
+    return NULL;
+}
 /*
  * Add the second numc.Matrix (Matrix61c) object to the first one. The first operand is
  * self, and the second operand can be obtained by casting `args`.
  */
 PyObject *Matrix61c_add(Matrix61c* self, PyObject* args) {
     /* TODO: YOUR CODE HERE */
+    return Matrix61c_ops(TWO, self, args, add_matrix);
 }
 
 /*
@@ -295,6 +377,7 @@ PyObject *Matrix61c_add(Matrix61c* self, PyObject* args) {
  */
 PyObject *Matrix61c_sub(Matrix61c* self, PyObject* args) {
     /* TODO: YOUR CODE HERE */
+    return Matrix61c_ops(TWO, self, args, sub_matrix);
 }
 
 /*
@@ -303,6 +386,7 @@ PyObject *Matrix61c_sub(Matrix61c* self, PyObject* args) {
  */
 PyObject *Matrix61c_multiply(Matrix61c* self, PyObject *args) {
     /* TODO: YOUR CODE HERE */
+    return Matrix61c_ops(TWO, self, args, mul_matrix);
 }
 
 /*
@@ -310,6 +394,7 @@ PyObject *Matrix61c_multiply(Matrix61c* self, PyObject *args) {
  */
 PyObject *Matrix61c_neg(Matrix61c* self) {
     /* TODO: YOUR CODE HERE */
+    return Matrix61c_ops(ONE, self, NULL, neg_matrix);
 }
 
 /*
@@ -317,6 +402,7 @@ PyObject *Matrix61c_neg(Matrix61c* self) {
  */
 PyObject *Matrix61c_abs(Matrix61c *self) {
     /* TODO: YOUR CODE HERE */
+    return Matrix61c_ops(ONE, self, NULL, abs_matrix);
 }
 
 /*
@@ -324,6 +410,8 @@ PyObject *Matrix61c_abs(Matrix61c *self) {
  */
 PyObject *Matrix61c_pow(Matrix61c *self, PyObject *pow, PyObject *optional) {
     /* TODO: YOUR CODE HERE */
+    return Matrix61c_ops(POW, self, pow, pow_matrix);
+    
 }
 
 /*
@@ -332,6 +420,12 @@ PyObject *Matrix61c_pow(Matrix61c *self, PyObject *pow, PyObject *optional) {
  */
 PyNumberMethods Matrix61c_as_number = {
     /* TODO: YOUR CODE HERE */
+    .nb_add = Matrix61c_add,
+    .nb_subtract = Matrix61c_sub,
+    .nb_multiply = Matrix61c_multiply,
+    .nb_power = Matrix61c_pow,
+    .nb_negative = Matrix61c_neg,
+    .nb_absolute = Matrix61c_abs,
 };
 
 
